@@ -1,4 +1,6 @@
+from multiprocessing.dummy import active_children
 from time import time
+from venv import create
 import PySimpleGUI as sg
 
 def create_window():
@@ -6,7 +8,7 @@ def create_window():
     layout = [
     [sg.Image('cross.png', pad=0,enable_events = True,key='-CLOSE-')],
     [sg.Text('Add Minute',font='Franklin 20',key='-MINUTE-'),sg.Text('Add Hour',font='Franklin 20',key='-HOUR-')],
-    [sg.Text('MONEY',font='Franklin 20',key='-TOTAL-')],
+    [sg.Text('$0.00',font='Franklin 20',key='-TOTAL-')],
     [sg.Input(key='-INPUT-')],
     [sg.Button('Start', button_color=('#FFFFFF','#FF0000'),border_width=0,key='-STARTSTOP-')]
     
@@ -17,28 +19,13 @@ def wage_per_second(wage,elapsed_time):
     secondly_wage = (wage / 3600)#Converts wage to seconds
     total = str(round((secondly_wage * elapsed_time),2))#Multiples time and wage per second, rounding to .00
 
-    return ('$',total,'Time', elapsed_time)#Returns as string to update screen
+#TODO: Elapsed time as Hour/Minute/Second
 
+    wageupdate = ('$',total,'Time', elapsed_time)#Store as tuple to pass to string concatenation
+    delimiter = ' '
+    
 
-
-def deprecated_wage_per_second(wage):
-    secondly_wage = (wage /3600)
-    total = 0
-    seconds = 40
-    minutes = 0
-    while total < wage:
-        if seconds != 0 and minutes != 0:
-            total = (secondly_wage * ((seconds) + (minutes * 60)))
-        elif seconds != 0:
-            total = (secondly_wage * seconds)
-        elif minutes != 0:
-            total = secondly_wage * (minutes * 60)
-        
-        seconds+= 1
-        if seconds % 60 == 0:
-            minutes += 1
-            seconds = seconds - 60
-        return('$', round(total,3), '|',minutes, 'Minute(s)', seconds, "Second(s)" )
+    return delimiter.join([str(value) for value in wageupdate])#List comprehension to convert tuple to string and print return.
 
 
 def add_minute():
@@ -51,41 +38,33 @@ def add_hour():
 
 window = create_window()
 active = False
-start_time = 0
+#start_time = 0
 while True:
     event, values = window.read(timeout=10)
     
     if event in(sg.WIN_CLOSED,'-CLOSE-'):
         break
     if event == '-STARTSTOP-':
-        if active == False:#Start to active
-            start_time = time()#Update start time
+        if active == False:#Start
+            start_time = time()#Update start time (Each new start resets time, no need to manually correct)
             active = True
             window['-STARTSTOP-'].update('Stop')
+        else:
+            #If already active we stop
+            if active == True:#Stop
+                active = False
+                window['-STARTSTOP-'].update('Start')
 
 
-    input_value = values['-INPUT-']
-    if input_value.isnumeric():
-        elapsed_time = round(time() - start_time,1)#Difference betwwne times
-        window['-TOTAL-'].update(wage_per_second(int(input_value),elapsed_time))
 
+    if active:#Detects if active before updating screen
+        input_value = values['-INPUT-']
+        if input_value.isnumeric():#TODO: Refactor so that program does not start until "start" is hit
+            elapsed_time = round(time() - start_time,1)#Difference between times
+            window['-TOTAL-'].update(wage_per_second(int(input_value),elapsed_time))
 
-""" wage = float(input('Enter hourly wage:'))
-while True:#TODO Async input
-
-    print('Enter 1 to print add a minute \n Enter 2 to add an hour \n Enter 3 at any time to stop the program.')
-    print_wage_second(wage_per_sec(wage),wage)
-    status = int(input())
-    if status == 1:
-        add_minute()
-    elif status == 2:
-        add_hour()
-    elif status == 3:
-        running = False
-        break
- """
 window.close()
 
 
-#TODO GUI
+#TODO GUI improvements
 #TODO Stop - Reset - Change Wage
