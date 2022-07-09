@@ -1,6 +1,4 @@
-from multiprocessing.dummy import active_children
 from time import time
-from venv import create
 import PySimpleGUI as sg
 
 def create_window():
@@ -8,7 +6,7 @@ def create_window():
     layout = [
     [sg.VPush()],
     [sg.Image('cross.png', pad=0,enable_events = True,key='-CLOSE-')],
-    [sg.Text('Add Minute',font='Franklin 20',key='-ADDMINUTE-', enable_events= True),sg.Text('Add Hour',font='Franklin 20',key='-ADDHOUR-')],
+    [sg.Text('Add Minute',font='Franklin 20',key='-ADDMINUTE-', enable_events= True),sg.Text('Add Hour',font='Franklin 20',key='-ADDHOUR-',enable_events= True)],
     [sg.Text('$0.00',font='Franklin 20',key='-TOTAL-')],
     [sg.Input(key='-INPUT-')],
     [sg.Button('Start', button_color=('#FFFFFF','#FF0000'),border_width=0,key='-STARTSTOP-')],
@@ -34,7 +32,9 @@ window = create_window()
 active = False
 elapsed_time = 0
 total_time = 0
-#start_time = 0
+minutes_added = 0
+hours_added = 0
+
 while True:
     event, values = window.read(timeout=10)
     
@@ -51,6 +51,8 @@ while True:
             #If already active we stop
             if active == True:#Stop
                 active = False
+                minutes_added = 0
+                hours_added = 0
                 window['-STARTSTOP-'].update('Start')
 
 #TIME AND MONEY UPDATES
@@ -59,18 +61,16 @@ while True:
         input_value = values['-INPUT-']
         if input_value.isnumeric():
 
+            
+            if event == '-ADDMINUTE-':#Increments minutes
+                minutes_added += 1
+            if event == '-ADDHOUR-':#Increments minutes
+                hours_added += 1
 
-            if event == '-ADDMINUTE-':#TODO: Fix functionality
-                print(elapsed_time)
-                #TODO: Does not add to timer, nor money
-                #elapsed_time = total_time + 60 - start_time <-- this should work
-                elapsed_time = round((time() + 60) - start_time, 1)#TODO:Cannot add to time - need to create variable for storing time updates.
-                window['-TOTAL-'].update(wage_per_second(int(input_value), elapsed_time))
-                print(elapsed_time)
                 
-
-            elapsed_time = round(time() - start_time,1)#Difference between times
-            window['-TOTAL-'].update(wage_per_second(int(input_value),elapsed_time))
+            total_time = time() + (60 * minutes_added) + (3600 * hours_added)
+            elapsed_time = round(total_time - start_time,1)#Calculates difference between current and start time
+            window['-TOTAL-'].update(wage_per_second(int(input_value),elapsed_time))#Updates -TOTAL- display
 
 window.close()
 
