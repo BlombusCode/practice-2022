@@ -2,27 +2,38 @@ from time import time
 import PySimpleGUI as sg
 
 def create_window():
-    sg.theme('black')
+    sg.theme('DarkGrey10')
     layout = [
-    [sg.VPush()],
-    [sg.Image('cross.png', pad=0,enable_events = True,key='-CLOSE-')],
-    [sg.Text('Add Minute',font='Franklin 20',key='-ADDMINUTE-', enable_events= True),sg.Text('Add Hour',font='Franklin 20',key='-ADDHOUR-',enable_events= True)],
+    [
+    sg.Button('+1 Minute',font='Franklin 10',key='-ADDMINUTE-', enable_events= True),sg.Button('+5 Minutes',font='Franklin 10',key='-ADD5MINUTE-', enable_events= True),
+    sg.Button('+1 Hour',font='Franklin 10',key='-ADDHOUR-',enable_events= True),sg.Button('+2 Hours',font='Franklin 10',key='-ADD2HOUR-',enable_events= True)
+    ],
     [sg.Text('$0.00',font='Franklin 20',key='-TOTAL-')],
     [sg.Input(key='-INPUT-')],
     [sg.Button('Start', button_color=('#FFFFFF','#FF0000'),border_width=0,key='-STARTSTOP-')],
     [sg.VPush()]
     
     ]
-    return sg.Window('Money Machine', layout,size=(300,300),no_titlebar = False,element_justification='center')
+    return sg.Window('Money Machine', layout,size=(500,150),no_titlebar = False,element_justification='center')
 
-def wage_per_second(wage,elapsed_time):
+def wage_time(wage,elapsed_time):
+    #Calculates monetary value
     secondly_wage = (wage / 3600)#Converts wage to seconds
-    total = str(round((secondly_wage * elapsed_time),2))#Multiples time and wage per second, rounding to .00
+    total = round((secondly_wage * elapsed_time),2)#Multiples time and wage per second, rounding to .00
 
-#TODO: Elapsed time as Hour/Minute/Second
+    #Calculates elapsed time
+    hours = elapsed_time // 3600
+    elapsed_time -= hours*3600
+    minutes = elapsed_time // 60
+    seconds = elapsed_time - minutes*60
+    #Convert time into 00.00.00 format
+    hours_print = str(round(hours)).zfill(2)
+    minutes_print = str(round(minutes)).zfill(2)
+    seconds_print = str(round(seconds)).zfill(2)
 
-    wageupdate = ('$',total,'Time', elapsed_time)#Store as tuple to pass to string concatenation
-    delimiter = ' '
+    
+    wageupdate = ('$',"%.2f" % total,' Time: ', hours_print,':', minutes_print,':',seconds_print)# hour, ' Hour', minute, ' Minute', seconds, ' Seconds')#Store as tuple to pass to string concatenation
+    delimiter = ''
     
 
     return delimiter.join([str(value) for value in wageupdate])#List comprehension to convert tuple to string and print return.
@@ -40,7 +51,7 @@ while True:
     
 #START/STOP PROGRAM
 
-    if event in(sg.WIN_CLOSED,'-CLOSE-'):
+    if event == sg.WIN_CLOSED:
         break
     if event == '-STARTSTOP-':
         if active == False:#Start
@@ -64,16 +75,16 @@ while True:
             
             if event == '-ADDMINUTE-':#Increments minutes
                 minutes_added += 1
+            if event == '-ADD5MINUTE-':#Increments minutes
+                minutes_added += 5
             if event == '-ADDHOUR-':#Increments minutes
                 hours_added += 1
+            if event == '-ADD2HOUR-':#Increments minutes
+                hours_added += 2
 
                 
             total_time = time() + (60 * minutes_added) + (3600 * hours_added)
             elapsed_time = round(total_time - start_time,1)#Calculates difference between current and start time
-            window['-TOTAL-'].update(wage_per_second(int(input_value),elapsed_time))#Updates -TOTAL- display
+            window['-TOTAL-'].update(wage_time(int(input_value),elapsed_time))#Updates -TOTAL- display
 
 window.close()
-
-
-#TODO GUI improvements
-#TODO Reset - Change Wage
